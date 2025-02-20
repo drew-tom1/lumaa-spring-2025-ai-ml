@@ -14,6 +14,14 @@ Please install the files with the command
 
 ```pip install -r requirements.txt```
 
+If you wish to run a virtual environment, please run it with the following commands.
+
+```python -m venv env```
+
+In macOS, the command is: ```source env/bin/activate```
+
+In Windows, the command is: ```env/Scripts/activate```
+
 # Run the program
 
 Please run the program with the following command:
