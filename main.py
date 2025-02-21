@@ -10,7 +10,7 @@ from nltk.stem import WordNetLemmatizer
 
 def initialize_nltk():
     """
-    Function to download NLTK assets
+    Function to download NLTK assets for preprocessing
     """
     nltk.download('stopwords')
     nltk.download('punkt')
@@ -28,9 +28,9 @@ def load_data():
     file (csv): Kaggle Dataset of movie info.
     """
     try:
-        file = pd.read_csv("movie_info.csv")
-        if "Plot" not in file.columns:
-            raise KeyError("The 'Plot' column is missing in the dataset.")
+        file = pd.read_csv("movies.csv")
+        if "storyline" not in file.columns:
+            raise KeyError("The 'storyline' column is missing in the dataset.")
         print("File loaded successfully")
         return file
     except (ValueError, KeyError) as e:
@@ -78,18 +78,18 @@ def compute_similarity(query, dataset, top_n):
     recommendations (pandas DataFrame): n number of recommendations.
     """
     # APPLY PREPROCESSING TO DATA (USER INPUT AND DATASET)
-    dataset["Processed_Plot"] = dataset["Plot"].apply(text_preprocessing)
+    dataset["Processed_Plot"] = dataset["storyline"].apply(text_preprocessing)
     processed_query = text_preprocessing(query)
 
     # BUILD VECTORS
-    vectorizer = TfidfVectorizer(stop_words="english")
+    vectorizer = TfidfVectorizer(stop_words="english",ngram_range=(1,2), max_features=5000)
     tfidf_matrix = vectorizer.fit_transform(dataset["Processed_Plot"])
     user_vector = vectorizer.transform([processed_query])
 
     # COMPUTE COSINE SIMILARITY AND ASSIGN RECOMMENDATIONS TO VARIABLE
     similiarity_score = cosine_similarity(user_vector, tfidf_matrix).flatten()
     top_matches = similiarity_score.argsort()[-min(top_n, len(dataset)):][::-1]
-    recommendations = dataset.iloc[top_matches][["Title", "Plot"]]
+    recommendations = dataset.iloc[top_matches][["title", "storyline"]]
 
     return recommendations
 
@@ -108,10 +108,6 @@ def main():
     except ValueError:
         print("ERROR: Invalid characters, please input an integer value for recommendations.")
     
-
-    
-
-
 
 if __name__ == "__main__":
     main()
