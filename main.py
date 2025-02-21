@@ -7,10 +7,15 @@ from nltk.corpus import stopwords
 from nltk.tokenize import word_tokenize
 from nltk.stem import WordNetLemmatizer
 
-nltk.download('stopwords')
-nltk.download('punkt')
-nltk.download('wordnet')
-nltk.download('punkt_tab')
+
+def initialize_nltk():
+    """
+    Function to download NLTK assets
+    """
+    nltk.download('stopwords')
+    nltk.download('punkt')
+    nltk.download('wordnet')
+    nltk.download('punkt_tab')
 
 def load_data():
     """
@@ -24,16 +29,20 @@ def load_data():
     """
     try:
         file = pd.read_csv("movie_info.csv")
+        if "Plot" not in file.columns:
+            raise KeyError("The 'Plot' column is missing in the dataset.")
         print("File loaded successfully")
-    except ValueError:
-        print("File did not load correctly. Please check file structure.")
-    return file
+        return file
+    except (ValueError, KeyError) as e:
+        print(f"Error loading file: {e}")
+        return None
+
 
 def text_preprocessing(text):
     """
     Preprocessing steps to reduce noise in the dataset entries.
 
-    - Converts characters to lowercase
+    - Converts characters to lowercases
     - Removes punctuation
     - Tokenizes words
     - Removes stopwords
@@ -51,7 +60,6 @@ def text_preprocessing(text):
 
     text = str(text).lower()
     text = text.translate(str.maketrans('', '', string.punctuation))
-    words = text.split()
     words = word_tokenize(text)
     words = [lemmatizer.lemmatize(word) for word in words if word not in stop_words]
 
@@ -80,13 +88,14 @@ def compute_similarity(query, dataset, top_n):
 
     # COMPUTE COSINE SIMILARITY AND ASSIGN RECOMMENDATIONS TO VARIABLE
     similiarity_score = cosine_similarity(user_vector, tfidf_matrix).flatten()
-    top_matches = similiarity_score.argsort()[-top_n:][::-1]
+    top_matches = similiarity_score.argsort()[-min(top_n, len(dataset)):][::-1]
     recommendations = dataset.iloc[top_matches][["Title", "Plot"]]
 
     return recommendations
 
 # MAIN ENTRY PT
 def main():
+    initialize_nltk()
     df = load_data()
     criteria_input = input("What content would you like?: ")
     match_input = input("How many recommendations would you like? (3-5 recommended): ")
